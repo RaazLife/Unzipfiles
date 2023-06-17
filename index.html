@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Unzip File</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    p {
+      text-align: center;
+      color: #777;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .upload-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .upload-btn:hover {
+      background-color: #0056b3;
+    }
+    .output {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f7f7f7;
+    }
+    .output ul {
+      list-style: none;
+      padding: 0;
+    }
+    .output li {
+      margin-bottom: 10px;
+    }
+    .output a {
+      display: block;
+      padding: 5px 10px;
+      background-color: #28a745;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .output a:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Unzip File</h1>
+    <p>Select a ZIP file and click "Unzip" to extract its contents.</p>
+
+    <label for="zipFile" class="upload-btn">Select ZIP File</label>
+    <input type="file" id="zipFile" accept=".zip">
+
+    <div class="output" id="output"></div>
+
+    <button id="unzipBtn" disabled>Unzip</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <script>
+    document.getElementById('zipFile').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function() {
+        var arrayBuffer = this.result;
+        var zip = new JSZip();
+
+        zip.loadAsync(arrayBuffer).then(function(contents) {
+          var output = document.getElementById('output');
+          output.innerHTML = '';
+
+          var fileList = document.createElement('ul');
+
+          Object.keys(contents.files).forEach(function(filename) {
+            zip.file(filename).async('uint8array').then(function(fileContent) {
+              var blob = new Blob([fileContent]);
+              var listItem = document.createElement('li');
+              var link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = filename;
+              link.innerText = filename;
+              listItem.appendChild(link);
+              fileList.appendChild(listItem);
+            });
+          });
+
+          output.appendChild(fileList);
+
+          var unzipBtn = document.getElementById('unzipBtn');
+          unzipBtn.removeAttribute('disabled');
+        });
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById('unzipBtn').addEventListener('click', function() {
+      var zip = new JSZip();
+      var output = document.getElementById('output');
+
+      zip.loadAsync(output.innerText.trim()).then(function(contents) {
+        Object.keys(contents.files).forEach(function(filename) {
+          zip.file(filename).async('uint8array').then(function(fileContent) {
+            var blob = new Blob([fileContent]);
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.innerText = filename;
+            link.classList.add('download-link');
+            output.appendChild(link);
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>
